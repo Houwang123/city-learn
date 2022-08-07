@@ -1,6 +1,7 @@
 from gym.spaces import Box
 from agents.user_agent import UserAgent
 from rewards.user_reward import UserReward
+from supervisor_as_visualiser import SupervisorAsVisualiser
 
 def dict_to_action_space(aspace_dict):
     return Box(
@@ -52,6 +53,10 @@ class OrderEnforcingAgent:
         """
         assert self.num_buildings is not None
         rewards = UserReward(agent_count=len(observation),observation=observation).calculate()
+
+        if observation[0][2] == 1:
+            SupervisorAsVisualiser.inform_day_end() # inform the supervisor that the rewards have been accumulating for 24 hours (when hour = 1)
+        SupervisorAsVisualiser.append_reward(rewards_for_one_step=rewards) # inform the supervisor of the rewards at this timestamp
 
         actions = []
         

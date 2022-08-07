@@ -1,6 +1,8 @@
 import numpy as np
 import time
 
+from supervisor_as_visualiser import SupervisorAsVisualiser # For visualiser
+
 """
 Please do not make changes to this file. 
 This is only a reference script provided to allow you 
@@ -100,6 +102,13 @@ def evaluate():
         print("Average Emmision Cost:", np.mean([e['emmision_cost'] for e in episode_metrics]))
     print(f"Total time taken by agent: {agent_time_elapsed}s")
     
+
+        
+    # Added for visualise, no real effects on performances etc
+
+    SupervisorAsVisualiser.plot_reward_vs_time()
+
+    # End here
 
 if __name__ == '__main__':
     evaluate()

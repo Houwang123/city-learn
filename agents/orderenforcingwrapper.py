@@ -31,6 +31,8 @@ class OrderEnforcingAgent:
         for agent_id in range(self.num_buildings):
             action_space = self.action_space[agent_id]
             self.agent.set_action_space(agent_id, action_space)
+
+        self.agent.pass_in_all_observation(observation) # Stupidity
         
         return self.compute_action(obs)
     
@@ -58,6 +60,7 @@ class OrderEnforcingAgent:
             SupervisorAsVisualiser.inform_day_end() # inform the supervisor that the rewards have been accumulating for 24 hours (when hour = 1)
         SupervisorAsVisualiser.append_reward(rewards_for_one_step=rewards) # inform the supervisor of the rewards at this timestamp
 
+        """
         actions = []
         
         for agent_id in range(self.num_buildings):
@@ -65,6 +68,9 @@ class OrderEnforcingAgent:
             actions.append(self.agent.compute_action(observation[agent_id], agent_id))
 
         # If you want a single central agent setup, change this function as needed
+        """
+
+        actions = self.agent.compute_all_actions(observation, rewards)
 
         
         return actions

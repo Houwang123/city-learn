@@ -1,10 +1,10 @@
-from agents.random_agent import RandomAgent
-from agents.rbc_agent import BasicRBCAgent
-
+from agents.actor_critic_agent.ac_agent import ActorCriticAgent
 
 ###################################################################
 #####                Specify your agent here                  #####
 ###################################################################
 
 # UserAgent = RandomAgent
-UserAgent = BasicRBCAgent
+# UserAgent = BasicRBCAgent
+# UserAgent = MyAgent
+UserAgent = ActorCriticAgent

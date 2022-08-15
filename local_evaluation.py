@@ -1,5 +1,8 @@
 import numpy as np
 import time
+import logging
+import os
+import shutil
 
 """
 Please do not make changes to this file. 
@@ -11,8 +14,24 @@ use this script for orchestrating the evaluations.
 from agents.orderenforcingwrapper import OrderEnforcingAgent
 from citylearn.citylearn import CityLearnEnv
 
+logging.basicConfig(filename='local_eval.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s',
+                            level=logging.DEBUG)
+logging.info(('start new episode:', 0))
+try:
+    os.remove('reward_function.txt')
+except FileNotFoundError:
+    pass
+try:
+    shutil.rmtree('./net_param')
+except OSError:
+    pass
+try:
+    os.mkdir('./net_param')
+except FileExistsError:
+    pass
+
 class Constants:
-    episodes = 3
+    episodes = 100
     schema_path = './data/citylearn_challenge_2022_phase_1/schema.json'
 
 def action_space_to_dict(aspace):
@@ -64,6 +83,11 @@ def evaluate():
 
             observations, _, done, _ = env.step(actions)
             if done:
+                with open('reward_function.txt', 'a') as f:
+                    f.write('new episode\n')
+                logging.info(('start new episode:', episodes_completed+1))
+
+
                 episodes_completed += 1
                 metrics_t = env.evaluate()
                 metrics = {"price_cost": metrics_t[0], "emmision_cost": metrics_t[1]}

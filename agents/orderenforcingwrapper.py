@@ -21,7 +21,8 @@ class OrderEnforcingAgent:
         self.action_space = None
     
     def register_reset(self, observation):
-        """Get the first observation after env.reset, return action""" 
+        """Get the first observation after env.reset, return action"""
+        print('register reset')
         action_space = observation["action_space"]
         self.action_space = [dict_to_action_space(asd) for asd in action_space]
         obs = observation["observation"]

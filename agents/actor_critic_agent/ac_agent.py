@@ -5,6 +5,7 @@ import torch.optim as optim
 import logging
 import os
 import time
+import random
 
 t.autograd.set_detect_anomaly(True)
 
@@ -49,7 +50,7 @@ def calc_reward(observation):
         reward -= unit_carbon_intensity * net_consumption
 
     # based on observation, reward has mean -0.6 and std 0.62
-    reward = (reward - (-0.6)) / 0.62
+    reward = (reward - (-1)) / 0.62
     # print(reward)
     # print('reward: ', reward, 'net consumption: ', net_consumption, 'electricity_pricing: ', electricity_pricing)
     return reward
@@ -65,13 +66,12 @@ class ActorCriticAgent:
         self.action_space = {}
         self.actor = Actor()
         self.critic = Critic()
-        self.actor_optimizer = t.optim.SGD(self.actor.parameters(), lr=1e-2)
-        self.critic_optimizer = t.optim.SGD(self.critic.parameters(), lr=1e-2, momentum=0.9)
-        # self.alpha_actor = 1e-2  # learning rate for actor
-        # self.alpha_critic = 1e-3  # learning rate for critic
-        self.gamma = 0  # discount factor used in TD-error calculation
-        # self.last_pred_reward = None
-        # self.last_choice_prob = None
+        self.actor_optimizer = t.optim.SGD(self.actor.parameters(), lr=1e-3)
+        self.critic_optimizer = t.optim.SGD(self.critic.parameters(), lr=1e-3, momentum=0.9)
+        self.gamma = 0.8  # discount factor used in TD-error calculation
+        self.actor_epoch = 5
+        self.critic_epoch = 10
+
         self.last_action = None
         self.last_observation_tensor = None
         self.last_state = None
@@ -111,10 +111,9 @@ class ActorCriticAgent:
         observation_tensor = t.tensor(observation_normalized, dtype=t.float)
 
         ps = t.softmax(self.actor(observation_tensor), dim=0)
-        choice = t.argmax(ps, dim=0)
-        # choice_prob = ps[choice]
+        choice = random.choices(range(21), weights=ps)[0]
         action = -1 + 0.1 * choice
-        action = action.detach()
+        action = t.tensor(action, dtype=t.float)
 
         q = self.evaluate_Q(observation_normalized, action)
 
@@ -131,30 +130,33 @@ class ActorCriticAgent:
 
 
         if self.last_state is not None:
-            last_ps = t.softmax(self.actor(self.last_observation_tensor), dim=0)
-            last_choice_prob = last_ps[self.last_choice]
-            actor_loss = t.log(last_choice_prob)
-            self.actor_optimizer.zero_grad()
-            actor_loss.backward()
-            self.actor_optimizer.step()
-            # for actor_param in self.actor.parameters():
-            #     # print(self.alpha_actor, reward, actor_param.grad)
-            #     actor_param.data += self.alpha_actor * reward * actor_param.grad
-            #     actor_param.grad = None
+            actor_total_loss = 0
+            last_pred_reward = self.evaluate_Q(self.last_state, self.last_action).item() # determines direction of optim
+            for epoch in range(self.actor_epoch):
+                last_ps = t.softmax(self.actor(self.last_observation_tensor), dim=0)
+                last_choice_prob = last_ps[self.last_choice]
+                actor_loss = t.log(last_choice_prob) * last_pred_reward * (-1)
+                actor_total_loss += actor_loss.item()
+                self.actor_optimizer.zero_grad()
+                actor_loss.backward()
+                self.actor_optimizer.step()
 
-            # print(self.last_pred_reward.requires_grad)
-            last_pred_reward = self.evaluate_Q(self.last_state, self.last_action)
-            critic_loss = (reward + self.gamma * q.detach() - last_pred_reward).pow(2)
-            self.critic_optimizer.zero_grad()
-            critic_loss.backward()
-            self.critic_optimizer.step()
+            critic_total_loss = 0
+            for epoch in range(self.critic_epoch):
+                last_pred_reward = self.evaluate_Q(self.last_state, self.last_action)
+                critic_loss = (reward + self.gamma * q.detach() - last_pred_reward).pow(2)
+                critic_total_loss += critic_loss.item()
+                self.critic_optimizer.zero_grad()
+                critic_loss.backward()
+                self.critic_optimizer.step()
 
-            # print('action:', action.item(), 'q:', q[0].item(),
-            #       'reward:', reward, 'critic loss:', critic_loss.item(), 'ps:', ps.detach().numpy(), 'observation:', observation)
             if agent_id == 0:
-                logging.debug(('action:', action.item(), 'q:', q[0].item(),
-                      'reward:', reward, 'critic loss:', critic_loss.item(), 'last pred reward', last_pred_reward.item()
-                               , 'ps:', [p.item() for p in ps], 'observation:', observation))
+                logging.debug(('date:', (observation[0], observation[1], observation[2]),
+                               'action: %.1f' % action.item(),
+                               'q:', q[0].item(),
+                                'reward:', reward,
+                               'critic avg loss:', critic_total_loss/self.critic_epoch,
+                               'ps:', [p.item() for p in ps], 'observation:', observation))
 
         # self.last_pred_reward = q
         # self.last_choice_prob = choice_prob

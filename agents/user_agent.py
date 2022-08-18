@@ -1,10 +1,3 @@
-from agents.random_agent import RandomAgent
-from agents.rbc_agent import BasicRBCAgent
+from agents.agents.nothing import NothingAgent
 
-
-###################################################################
-#####                Specify your agent here                  #####
-###################################################################
-
-# UserAgent = RandomAgent
-UserAgent = BasicRBCAgent
+UserAgent = NothingAgent

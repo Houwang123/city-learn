@@ -22,7 +22,6 @@ class OrderEnforcingAgent:
     
     def register_reset(self, observation):
         """Get the first observation after env.reset, return action"""
-        print('register reset')
         action_space = observation["action_space"]
         self.action_space = [dict_to_action_space(asd) for asd in action_space]
         obs = observation["observation"]
@@ -64,3 +63,7 @@ class OrderEnforcingAgent:
 
         
         return actions
+
+    def finish_episode(self, metrics, episodes_completed):
+        for agent_id in range(self.num_buildings):
+            self.agent.finish_episode(agent_id, metrics, episodes_completed)

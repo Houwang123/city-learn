@@ -1,4 +1,5 @@
-from agents.actor_critic_agent.ac_agent import ActorCriticAgent
+from agents.actor_critic_agent.REINFORCE_agent import ReinforceAgent
+from agents.random_agent import RandomAgent
 
 ###################################################################
 #####                Specify your agent here                  #####
@@ -7,4 +8,4 @@ from agents.actor_critic_agent.ac_agent import ActorCriticAgent
 # UserAgent = RandomAgent
 # UserAgent = BasicRBCAgent
 # UserAgent = MyAgent
-UserAgent = ActorCriticAgent
+UserAgent = ReinforceAgent

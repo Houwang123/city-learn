@@ -3,6 +3,7 @@ import time
 import logging
 import os
 import shutil
+from matplotlib import pyplot as plt
 
 """
 Please do not make changes to this file. 
@@ -87,12 +88,13 @@ def evaluate():
                     f.write('new episode\n')
                 logging.info(('start new episode:', episodes_completed+1))
 
-
                 episodes_completed += 1
                 metrics_t = env.evaluate()
-                metrics = {"price_cost": metrics_t[0], "emmision_cost": metrics_t[1]}
+                metrics = {"price_cost": metrics_t[0], "emission_cost": metrics_t[1]}
                 if np.any(np.isnan(metrics_t)):
                     raise ValueError("Episode metrics are nan, please contant organizers")
+                agent.finish_episode(metrics, episodes_completed)
+                print(f'agents finished up')
                 episode_metrics.append(metrics)
                 print(f"Episode complete: {episodes_completed} | Latest episode metrics: {metrics}", )
 

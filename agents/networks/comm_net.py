@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import random, math
 import typing
+import time
 
 class CommNet(nn.Module):
     '''
@@ -75,10 +76,12 @@ class CommNet(nn.Module):
             # (Building, Observations)
             
             # Initial hidden states
+            start = time.time()
             hidden_states = self._in_mlp(x)
             cell_states = torch.zeros(hidden_states.shape,device=self.device)
 
             # Communication
+            start = time.time()
             for t in range(self.comm_steps):
                 # Calculate communication vectors
                 comm = self._comm_mlp(hidden_states)

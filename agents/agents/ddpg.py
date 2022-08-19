@@ -3,6 +3,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import time
+
 
 def add_dimension(length, shape = None):
     return (length, *shape)
@@ -91,7 +93,7 @@ class DDPGAgent:
                  gamma = 0.99, 
                  lr = 3e-4,
                  tau = 0.001,
-                 batch_size = 128,
+                 batch_size = 32,
                  memory_size = 4096,
                  device = 'cpu'):
         self.GAMMA=gamma
@@ -148,6 +150,9 @@ class DDPGAgent:
     def update(self,s,a,r,ns):
         self.rb.add(s,a,r,ns)
         
+        if len(self.rb) < self.BATCH_SIZE: # Get some data first before beginning the training process
+            return
+
         a_s, c_s,a,r,a_ns, c_ns = self.rb.sample(batch_size=self.BATCH_SIZE)
 
         # Critic update
@@ -158,14 +163,12 @@ class DDPGAgent:
             y_t = torch.add(torch.unsqueeze(r,1), self.GAMMA * self.critic_target(c_ns,nsa))
         y_c = self.critic(c_s, a) 
         c_loss = self.c_criterion(y_c,y_t)
-        critic_loss = c_loss.item()
         c_loss.backward()
-        self.c_optimize.step()
+        self.c_optimize.step()   
 
         # Actor update
         self.a_optimize.zero_grad()
         a_loss = -self.critic(c_s,self.actor.forward(a_s,batch=True)).mean() # Maximize gradient direction increasing objective function
-        actor_loss = a_loss.item()
         a_loss.backward()
         self.a_optimize.step()
 

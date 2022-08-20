@@ -1,6 +1,9 @@
 # venv management
 env
 
+# Testing
+debugging.ipynb
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

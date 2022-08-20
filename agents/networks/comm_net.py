@@ -68,57 +68,31 @@ class CommNet(nn.Module):
             nn.Tanh()
         )
 
+    def forward(self,x : torch.Tensor):
 
-    def forward(self,x : torch.Tensor, batch = False):
+        if len(x.shape) == 2:
+            x = torch.unsqueeze(x,0)
 
-        out = None
-        if not batch:
+        # (Batch, Building, Observations)
+        N = x.size(1)
+        if N != self.agent_number:
+            self.agent_number = N
+        
+        hidden_states = torch.Tensor.view(self._in_mlp(x),(x.size(0)*N,self._lstm.hidden_size))
+        cell_states = torch.zeros(hidden_states.shape,device=self.device)
 
-            # (Building, Observations)
+        for t in range(self.comm_steps):
+            # Calculate communication vectors
+            comm = torch.Tensor.view(self._comm_mlp(hidden_states),(x.size(0),N,self._lstm.input_size))
+            total_comm = torch.unsqueeze(torch.sum(comm,1),dim=1)
+            comm = (total_comm - comm) / (N-1)
+            comm = torch.Tensor.view(comm,(x.size(0)*N,self._lstm.input_size)) # (Batch * Building, Observation)
+            # Apply LSTM   
+            hidden_states, cell_states = self._lstm(comm,(hidden_states,cell_states))
             
-            # Initial hidden states
-            start = time.time()
-            hidden_states = self._in_mlp(x)
-            cell_states = torch.zeros(hidden_states.shape,device=self.device)
-            # Communication
-            start = time.time()
-            for t in range(self.comm_steps):
-                # Calculate communication vectors
-                comm = self._comm_mlp(hidden_states)
-                total_comm = torch.sum(comm,0)
-                comm = (total_comm - comm) / (self.agent_number-1)
-                # Apply LSTM   
-                hidden_states, cell_states = self._lstm(comm,(hidden_states,cell_states))
-            
-            out = self._out_mlp(torch.cat((x,hidden_states),dim=1))
-        else:
-            # (Batch, Building, Observation)
-            assert(len(x.size()) == 3) # Expecting dimension (Batch, Building, Observation)
-            n_batch = x.size(0)
-            n_building = x.size(1)
-            n_observation = x.size(2)
+        hidden_states = torch.Tensor.view(hidden_states,(x.size(0),N,self._lstm.hidden_size))
 
-            x = torch.reshape(x, [n_batch * n_building, n_observation]) # Turn it into (Batch * Building, Observation)
-
-            hidden_states = self._in_mlp(x)
-            cell_states = torch.zeros(hidden_states.shape,device=self.device)
-
-            # Communication
-            for t in range(self.comm_steps):
-                # Calculate communication vectors
-                comm = self._comm_mlp(hidden_states)
-                total_comm = torch.sum(comm,0)
-                comm = (total_comm - comm) / (self.agent_number-1)
-                # Apply LSTM   
-                hidden_states, cell_states = self._lstm(comm,(hidden_states,cell_states))
-            
-            out = self._out_mlp(torch.cat((x,hidden_states),dim=1))
-            
-            out = torch.reshape(out, [n_batch, n_building, 1]) # Turn "out" from (Batch * Building, 1) back into (Batch, Building, 1)
-
-            # Reshape time save: 0.0147 -> 0.0010 (on average, second, per operation)
-
-            
+        out = self._out_mlp(torch.cat((x,hidden_states),dim=-1))
 
         return out
 

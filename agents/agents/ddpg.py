@@ -41,7 +41,7 @@ class ReplayBuffer:
 
         self.i += 1
         if self.i >= self.MAX_SIZE:
-            self.i == 0
+            self.i = 0
         elif self.i > self.size:
             self.size = self.i    
 
@@ -93,7 +93,7 @@ class DDPGAgent:
                  gamma = 0.99, 
                  lr = 3e-4,
                  tau = 0.001,
-                 batch_size = 32,
+                 batch_size = 64,
                  memory_size = 4096,
                  device = 'cpu'):
         self.GAMMA=gamma
@@ -141,7 +141,7 @@ class DDPGAgent:
         a_obs = torch.from_numpy(self.actor_feature.transform(obs))
         a_obs = a_obs.to(device=self.device)
         with torch.no_grad():
-            action = self.actor(a_obs).numpy()
+            action = self.actor(a_obs).numpy()[0]
         if self.training:
             action = action + np.random.normal(scale=max(0.03,0,5*np.exp(-0.001*self.step)), size=action.shape)
             action = np.clip(action,a_min=-1.0,a_max=1.0)
@@ -159,7 +159,7 @@ class DDPGAgent:
         self.c_optimize.zero_grad()
         nsa, y_t = None,None
         with torch.no_grad():
-            nsa = self.actor_target.forward(a_ns,batch=True)
+            nsa = self.actor_target.forward(a_ns)
             y_t = torch.add(torch.unsqueeze(r,1), self.GAMMA * self.critic_target(c_ns,nsa))
         y_c = self.critic(c_s, a) 
         c_loss = self.c_criterion(y_c,y_t)
@@ -168,7 +168,7 @@ class DDPGAgent:
 
         # Actor update
         self.a_optimize.zero_grad()
-        a_loss = -self.critic(c_s,self.actor.forward(a_s,batch=True)).mean() # Maximize gradient direction increasing objective function
+        a_loss = -self.critic(c_s,self.actor.forward(a_s)).mean() # Maximize gradient direction increasing objective function
         a_loss.backward()
         self.a_optimize.step()
 

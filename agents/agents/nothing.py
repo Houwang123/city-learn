@@ -11,5 +11,11 @@ class NothingAgent:
     def update(*args):
         pass
 
-    def compute_action(obs):
+    def compute_action(self, obs):
         return np.array([0 for x in range(len(obs))])
+
+    def save(*args):
+        pass
+
+    def load(*args):
+        pass

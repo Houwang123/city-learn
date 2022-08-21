@@ -47,12 +47,14 @@ def calc_reward(observation):
         observation[24], observation[25], observation[26], observation[27]
 
     if net_consumption < 0:
-        reward = net_consumption * 0.1
+        reward = 0
+        # reward = net_consumption
     else:
         reward = -electricity_pricing * net_consumption
         reward -= unit_carbon_intensity * net_consumption
 
 
+    reward *= -1  # TODO: remove this line
     # # based on observation, reward has mean -0.6 and std 0.62
     # reward = (reward - (-1)) / 0.62
     return reward
@@ -67,8 +69,8 @@ class ReinforceAgent:
     def __init__(self):
         self.action_space = {}
         self.policy = Policy()
-        self.optimizer = t.optim.Adam(self.policy.parameters(), lr=3e-2)
-        self.gamma = 1  #0.99
+        self.optimizer = t.optim.Adam(self.policy.parameters(), lr=1e-2)
+        self.gamma = 0.99
 
 
         # with open('../../net_param/critic_1660483051.0458481.net', 'rb') as f:
@@ -124,7 +126,10 @@ class ReinforceAgent:
         self.rewards.append(reward)
         self.total_reward += reward
         observation_normalized = normalize_observation(observation)
+        agent_id_tensor = t.zeros((5, ), dtype=t.float32)
+        agent_id_tensor[agent_id] = 1
         observation_tensor = t.tensor(observation_normalized, dtype=t.float)
+        observation_tensor = t.cat((observation_tensor, agent_id_tensor), dim=0)
 
         probs = self.policy(observation_tensor)
         c = Categorical(probs)

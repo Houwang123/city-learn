@@ -1,0 +1,23 @@
+{   
+    "agent": {
+        "type": "DDPGAgent", 
+        "attributes": {
+            "actor": "CommNet",
+            "critic": "CentralCritic",
+            "actor_feature": "BaseFeatureEngineer()",
+            "critic_feature": "CentralCriticEngineer(BaseFeatureEngineer())", 
+            "a_kwargs": {},
+            "c_kwargs": {},
+            "gamma": 0.99, 
+            "lr":3e-4,
+            "tau":0.001,
+            "batch_size":64,
+            "memory_size":4096,
+            "device": "'cpu'"
+        }
+    },
+    "episodes": 10,
+    "schema": "'./data/citylearn_challenge_2022_phase_1/schema.json'",
+    "reward": "default_reward",
+    "id": 0
+}

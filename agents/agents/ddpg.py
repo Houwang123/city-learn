@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import time
+import time, os
 
 
 def add_dimension(length, shape = None):
@@ -29,6 +29,7 @@ class ReplayBuffer:
         self.a_ns = np.zeros(add_dimension(memory_size,actor_obs_shape),dtype=np.float32)
 
         self.size, self.i, self.MAX_SIZE = 0,0, memory_size
+        self.device = 'cpu'
 
     def add(self, s, a, r, ns):
         r = np.sum(r)
@@ -60,7 +61,7 @@ class ReplayBuffer:
             self.c_ns[idxs]
         ]
         if t:
-            sample = [torch.from_numpy(x) for x in sample]
+            sample = [torch.from_numpy(x).to(self.device) for x in sample]
         return sample
 
     def __len__(self):
@@ -74,14 +75,14 @@ class ReplayBuffer:
             raise IndexError
         return (self.s[i], self.a[i],self.r[i],self.ns[i])
 
+    def to(self,device):
+        self.device = device
+
 
 class DDPGAgent:
     '''
     Implements base DDPG with Gaussian exploration
     '''
-    
-    training = True
-    step = 0
     
     def __init__(self,
                  actor,
@@ -108,6 +109,8 @@ class DDPGAgent:
         self.critic_setup = critic
         self.a_kwargs = a_kwargs
         self.c_kwargs = c_kwargs
+        self.training = True
+        self.step = 0
 
     def register_reset(self, observation, training=True):
         '''
@@ -130,18 +133,21 @@ class DDPGAgent:
         self.a_optimize = optim.Adam(self.actor.parameters(),lr=self.LR)
         self.c_optimize = optim.Adam(self.critic.parameters(),lr=self.LR)
 
+        self.to(self.device)
+
     def to(self,device):
         self.device = device
         self.actor.to(device)
         self.actor_target.to(device)
         self.critic.to(device)
         self.critic_target.to(device)
+        self.rb.to(device)
 
     def compute_action(self, obs):
         a_obs = torch.from_numpy(self.actor_feature.transform(obs))
         a_obs = a_obs.to(device=self.device)
         with torch.no_grad():
-            action = self.actor(a_obs).numpy()[0]
+            action = self.actor(a_obs).cpu().numpy()[0]
         if self.training:
             action = action + np.random.normal(scale=max(0.03,0,5*np.exp(-0.001*self.step)), size=action.shape)
             action = np.clip(action,a_min=-1.0,a_max=1.0)
@@ -177,3 +183,11 @@ class DDPGAgent:
             ct_p.data = ct_p.data * (1.0-self.TAU) + c_p.data * self.TAU
         for at_p, a_p in zip(self.actor_target.parameters(), self.actor.parameters()):
             at_p.data = at_p.data * (1.0-self.TAU) + a_p.data * self.TAU
+
+    def save(self, path):
+        torch.save(self.actor.state_dict(),os.path.join(path,'actor.pt'))
+        torch.save(self.critic.state_dict(),os.path.join(path,'critic.pt'))
+
+    def load(self, path):
+        self.actor.load_state_dict(torch.load(os.path.join(path,'actor.pt')))
+        self.critic.load_state_dict(torch.load(os.path.join(path,'critic.pt')))

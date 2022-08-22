@@ -5,10 +5,9 @@ class OrderEnforcingAgent:
 
     s, a, r, ns = None, None, None, None
 
-    def __init__(self, agent = UserAgent(), local = False):
+    def __init__(self, agent = UserAgent()):
         self.num_buildings = 0
         self.agent = agent
-        self.local = local
     
     def register_reset(self, observation, training=True):
         """Get the first observation after env.reset, return action""" 
@@ -42,3 +41,9 @@ class OrderEnforcingAgent:
             self.agent.update(self.s,self.a,rewards,obs)
         self.s, self.a = obs, actions
         return actions
+
+    def save(self, path):
+        self.agent.save(path)
+    
+    def load(self, path):
+        self.agent.load(path)

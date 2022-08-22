@@ -27,12 +27,17 @@ def get_np_of_frame_at(index):
     return data
 
 import io
+import PIL
 
-def image_to_byte_array(image: Image) -> bytes:
-  imgByteArr = io.BytesIO()
-  image.save(imgByteArr, format=image.format)
-  imgByteArr = imgByteArr.getvalue()
-  return imgByteArr
+def compress_to_bytes(data, fmt = 'png'):
+    """
+    Helper function to compress image data via PIL/Pillow.
+    """
+    buff = io.BytesIO()
+    img = PIL.Image.fromarray(data)    
+    img.save(buff, format=fmt)
+    
+    return buff.getvalue()
 
 def get_bytes_of_frame_at(index):
-    return image_to_byte_array(get_image_of_frame_at(index))
+    return compress_to_bytes(get_np_of_frame_at(index))

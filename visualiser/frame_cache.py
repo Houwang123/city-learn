@@ -3,6 +3,9 @@ import numpy as np
 
 frames = []
 
+def empty():
+    frames = []
+
 def append_one_frame(one_frame):
     frames.append(one_frame)
 

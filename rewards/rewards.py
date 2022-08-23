@@ -1,5 +1,7 @@
 import numpy as np
 
+# Please make sure all new reward function names end with "reward", like "default_reward", and nothing else ends with "reward"
+
 def default_reward(electricity_consumption, 
                    carbon_emission, 
                    electricity_price, 

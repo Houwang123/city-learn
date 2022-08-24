@@ -112,28 +112,33 @@ class DDPGAgent:
         self.training = True
         self.step = 0
 
+        self.num_agents = 0
+        self.has_setup = False
+
     def register_reset(self, observation, training=True):
         '''
         Called at the start of each new episode
         '''
-        self.training = training
-        self.num_agents = len(observation["observation"])
-        self.step = 0
+        if not self.has_setup:
+            self.step = 0
+            self.has_setup = True
+            self.training = training
+            self.num_agents = len(observation["observation"])
+            
+            self.actor_feature.register_reset(observation)
+            self.critic_feature.register_reset(observation)
+            self.rb = ReplayBuffer((self.num_agents,1),self.actor_feature,self.critic_feature,memory_size=self.MEMORY_SIZE)
 
-        self.actor_feature.register_reset(observation)
-        self.critic_feature.register_reset(observation)
-        self.rb = ReplayBuffer((self.num_agents,1),self.actor_feature,self.critic_feature,memory_size=self.MEMORY_SIZE)
+            self.actor = self.actor_setup(input_size = self.actor_feature.out, **self.a_kwargs)
+            self.actor_target = copy.deepcopy(self.actor)
+            self.critic = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
+            self.critic_target = copy.deepcopy(self.critic)
+            
+            self.c_criterion = nn.MSELoss()
+            self.a_optimize = optim.Adam(self.actor.parameters(),lr=self.LR)
+            self.c_optimize = optim.Adam(self.critic.parameters(),lr=self.LR)
 
-        self.actor = self.actor_setup(input_size = self.actor_feature.out, **self.a_kwargs)
-        self.actor_target = copy.deepcopy(self.actor)
-        self.critic = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
-        self.critic_target = copy.deepcopy(self.critic)
-        
-        self.c_criterion = nn.MSELoss()
-        self.a_optimize = optim.Adam(self.actor.parameters(),lr=self.LR)
-        self.c_optimize = optim.Adam(self.critic.parameters(),lr=self.LR)
-
-        self.to(self.device)
+            self.to(self.device)
 
     def to(self,device):
         self.device = device
@@ -149,7 +154,8 @@ class DDPGAgent:
         with torch.no_grad():
             action = self.actor(a_obs).cpu().numpy()[0]
         if self.training:
-            action = action + np.random.normal(scale=min(0.5,max(0.03,0,5*np.exp(-0.001*self.step))), size=action.shape)
+            # Someone needs to be assigned to this
+            action = action + np.random.normal(scale=min(0.8,max(0.05,5*np.exp(-0.0002*self.step))), size=action.shape)
             action = np.clip(action,a_min=-1.0,a_max=1.0)
         return action
 
@@ -201,27 +207,30 @@ class TD3Agent(DDPGAgent):
         self.clip_size = clip_size
 
     def register_reset(self, observation, training = True):
-        self.training = training
-        self.num_agents = len(observation["observation"])
-        self.step = 0
 
-        self.actor_feature.register_reset(observation)
-        self.critic_feature.register_reset(observation)
-        self.rb = ReplayBuffer((self.num_agents,1),self.actor_feature,self.critic_feature,memory_size=self.MEMORY_SIZE)
+        if not self.has_setup:
+            self.step = 0
+            self.has_setup = True
+            self.training = training
+            self.num_agents = len(observation["observation"])
+            self.actor_feature.register_reset(observation)
+            self.critic_feature.register_reset(observation)
+            self.rb = ReplayBuffer((self.num_agents,1),self.actor_feature,self.critic_feature,memory_size=self.MEMORY_SIZE)
 
-        self.actor = self.actor_setup(input_size = self.actor_feature.out, **self.a_kwargs)
-        self.actor_target = copy.deepcopy(self.actor)
-        self.critic = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
-        self.critic_target = copy.deepcopy(self.critic)
-        
-        self.c_criterion = nn.MSELoss()
-        self.a_optimize = optim.Adam(self.actor.parameters(),lr=self.LR)
-        self.c_optimize = optim.Adam(self.critic.parameters(),lr=self.LR)
-        self.critic_2 = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
-        self.critic_target_2 = copy.deepcopy(self.critic_2)
-        self.c_optimize_2 = optim.Adam(self.critic_2.parameters(),lr=self.LR)
-        
-        self.to(self.device)
+            self.actor = self.actor_setup(input_size = self.actor_feature.out, **self.a_kwargs)
+            self.actor_target = copy.deepcopy(self.actor)
+            self.critic = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
+            self.critic_target = copy.deepcopy(self.critic)
+            
+            self.c_criterion = nn.MSELoss()
+            self.a_optimize = optim.Adam(self.actor.parameters(),lr=self.LR)
+            self.c_optimize = optim.Adam(self.critic.parameters(),lr=self.LR)
+
+            self.critic_2 = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
+            self.critic_target_2 = copy.deepcopy(self.critic_2)
+            self.c_optimize_2 = optim.Adam(self.critic_2.parameters(),lr=self.LR)
+            
+            self.to(self.device)
 
     def to(self,device):
         super(TD3Agent,self).to(device)

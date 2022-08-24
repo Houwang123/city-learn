@@ -8,15 +8,15 @@
             "critic_feature": "CentralCriticEngineer(MinMaxNormalizationEngineer(BaseFeatureEngineer()))", 
             "a_kwargs": {},
             "c_kwargs": {},
-            "gamma": 0.95, 
+            "gamma": 0.99, 
             "lr":3e-4,
             "tau":0.001,
             "batch_size":128,
-            "memory_size":4096,
+            "memory_size":65536,
             "device": "'cpu'"
         }
     },
-    "episodes": 5,
+    "episodes": 100,
     "schema": "'./data/citylearn_challenge_2022_phase_1/schema.json'",
     "reward": "default_reward",
     "id": 1

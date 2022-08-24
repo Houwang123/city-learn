@@ -1,23 +1,23 @@
 {   
     "agent": {
-        "type": "DDPGAgent", 
+        "type": "TD3Agent", 
         "attributes": {
             "actor": "CommNet",
             "critic": "CentralCritic",
-            "actor_feature": "BaseFeatureEngineer()",
-            "critic_feature": "CentralCriticEngineer(BaseFeatureEngineer())", 
+            "actor_feature": "MinMaxNormalizationEngineer(BaseFeatureEngineer())",
+            "critic_feature": "CentralCriticEngineer(MinMaxNormalizationEngineer(BaseFeatureEngineer()))", 
             "a_kwargs": {},
             "c_kwargs": {},
-            "gamma": 0.99, 
+            "gamma": 0.95, 
             "lr":3e-4,
             "tau":0.001,
-            "batch_size":64,
+            "batch_size":128,
             "memory_size":4096,
             "device": "'cpu'"
         }
     },
-    "episodes": 10,
+    "episodes": 5,
     "schema": "'./data/citylearn_challenge_2022_phase_1/schema.json'",
     "reward": "default_reward",
-    "id": 0
+    "id": 1
 }

@@ -71,7 +71,7 @@ def setup_reward(reward):
 ##################################################
 from agents.orderenforcingwrapper import OrderEnforcingAgent
 
-from agents.agents.ddpg import DDPGAgent
+from agents.agents.ddpg import DDPGAgent, TD3Agent
 from agents.agents.nothing import NothingAgent
 from agents.networks.central_critic import CentralCritic
 from agents.networks.comm_net import CommNet

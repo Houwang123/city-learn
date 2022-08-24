@@ -1,24 +1,34 @@
-import json, math, sys, os, shutil
+import json, math, sys, os, shutil, optparse, copy
+from tokenize import Triple
 from citylearn.citylearn import CityLearnEnv
 import pickle as pkl
 from tqdm import tqdm
 
+
 import experiments.utils.setup as setup
 from experiments.utils.setup import env_reset
 
+p = optparse.OptionParser()
+p.add_option('--force', '-f', type=None, help='Force overwrite of experiment',action="store_true")
+
 if __name__ == '__main__':
+    options, arguments = p.parse_args()
     raw = sys.argv[1]
-    experiment =  json.load(open(raw,'r'))
+    experiment = json.load(open(raw,'r'))
+    experiment_raw = copy.deepcopy(experiment)
     setup.deserialize_document(experiment)
     print("========================================")
     # Check if experiment already run
     experiment_log_path = os.path.join('experiments',str(experiment['id']))
     if os.path.exists(experiment_log_path):
-        print("Error: Duplicate experiment ID.")
-        quit()
-    else:
-        os.makedirs(experiment_log_path)
-        shutil.copy(raw,experiment_log_path)
+        print("Warning: Duplicate experiment ID.")
+        if not options.force:
+            quit()
+        shutil.rmtree(experiment_log_path)
+        print("Continuing overwrite")
+    
+    os.makedirs(experiment_log_path)
+    json.dump(experiment_raw,open(os.path.join(experiment_log_path,'agent.json'),'w'))
 
     # Environment setup
 

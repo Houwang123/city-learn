@@ -23,9 +23,9 @@ class CentralCritic(nn.Module):
 
         self._in_mlp = nn.Sequential(
             nn.Linear(input_size+action_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(hidden_size, 1),
         )
 

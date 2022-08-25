@@ -1,32 +1,32 @@
 column_name = [
-    ('M',True),
-    ('D',True),
-    ('H',True),
-    ('T',True),
-    ('T_6h',True),
-    ('T_12h',True),
-    ('T_24h',True),
-    ('Hum',True), 
-    ('Hum_6h',True), 
-    ('Hum_12h',True),    
-    ('Hum_24h',True), 
-    ('dhi',True), 
-    ('dhi_6h',True), 
-    ('dhi_12h',True), 
-    ('dhi_24h',True),
-    ('dni',True), 
-    ('dni_6h',True),
-    ('dni_12h',True), 
-    ('dni_24h',True),
-    ('carbon',True), #index 19
-    ('consumption',False), # index 20
-    ('generation',False),  
-    ('storage',False),
-    ('nconsumption',False),
-    ('price',False), 
-    ('price_6h',False),
-    ('price_12h',False), 
-    ('price_24h',False)
+    ('M',True), # 0
+    ('D',True), # 1
+    ('H',True), # 2
+    ('T',True), # 3
+    ('T_6h',True), # 4
+    ('T_12h',True), # 5
+    ('T_24h',True), # 6
+    ('Hum',True), # 7 
+    ('Hum_6h',True), # 8
+    ('Hum_12h',True), # 9 
+    ('Hum_24h',True), # 10
+    ('dhi',True), # 11
+    ('dhi_6h',True), # 12
+    ('dhi_12h',True), # 13
+    ('dhi_24h',True), # 14
+    ('dni',True), # 15
+    ('dni_6h',True), # 16
+    ('dni_12h',True), # 17
+    ('dni_24h',True), # 18
+    ('carbon_intensity',True), # 19
+    ('base_consumption',False), # 20
+    ('solar_generation',False), # 21 
+    ('electrical_storage_soc',False), # 22
+    ('net_electricity_consumption',False), # 23
+    ('price',False), # 24
+    ('price_6h',False), # 25
+    ('price_12h',False), # 26
+    ('price_24h',False) # 27
 ]
 
 from abc import ABC, abstractmethod

@@ -2,7 +2,7 @@ from typing import List
 import numpy as np
 from rewards.rewards import *
 
-reward_function = default_reward
+reward_function = None
 
 def get_reward(electricity_consumption: List[float], 
                carbon_emission: List[float], 
@@ -28,4 +28,4 @@ def get_reward(electricity_consumption: List[float],
             or = number of buildings (independent agent for each building).
         """
         
-        return reward_function(electricity_consumption,carbon_emission, electricity_price, agent_ids)
+        # return reward_function(electricity_consumption,carbon_emission, electricity_price, agent_ids)

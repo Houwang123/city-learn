@@ -18,6 +18,6 @@
     },
     "episodes": 100,
     "schema": "'./data/citylearn_challenge_2022_phase_1/schema.json'",
-    "reward": "default_reward",
+    "reward": "simple_reward",
     "id": 1
 }

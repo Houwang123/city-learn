@@ -29,11 +29,11 @@ def simple_reward(state, next_state, actions):
 
     # Main metric
     state, next_state, actions = map(np.array, [state,next_state,actions])
+    base_consumption = np.maximum(0,next_state[:,20] - next_state[:,21])
     net_consumption = np.maximum(0,next_state[:,23])
-
-    reward = (-net_consumption) * (next_state[:,21] + next_state[:,24])
+    
+    reward = (base_consumption-net_consumption) * (1.8 * next_state[:,19] + next_state[:,24])
     reward = reward.squeeze()
-
     # Illegal actions
     previous_battery_soc = state[:,22].squeeze()
     actions = actions.squeeze()
@@ -42,8 +42,6 @@ def simple_reward(state, next_state, actions):
         # Charging too much
     reward = reward + np.minimum(0, (1 - previous_battery_soc)-(actions-0.1))
     
-
-
     # Output
     
     return reward

@@ -1,3 +1,3 @@
-from agents.agents.nothing import NothingAgent
+from agents.agents.rules import NothingAgent
 
 UserAgent = NothingAgent

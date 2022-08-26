@@ -74,6 +74,7 @@ class OrderEnforcingAgent:
         ax.axhline(y=average,color='r')
         ax.set_xlabel('Step')
         ax.set_ylabel('Reward')
+        ax.text(0,0,str(average))
         fig.savefig(os.path.join(path,'rewards.png'))
         plt.close(fig)
 

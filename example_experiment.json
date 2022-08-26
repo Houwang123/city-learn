@@ -4,20 +4,26 @@
         "attributes": {
             "actor": "CommNet",
             "critic": "CentralCritic",
-            "actor_feature": "MinMaxNormalizationEngineer(BaseFeatureEngineer())",
-            "critic_feature": "CentralCriticEngineer(MinMaxNormalizationEngineer(BaseFeatureEngineer()))", 
-            "a_kwargs": {},
-            "c_kwargs": {},
+            "actor_feature": "RuleFeatureEngineerV0(BaseFeatureEngineer())",
+            "critic_feature": "CentralCriticEngineer(RuleFeatureEngineerV0(BaseFeatureEngineer()))", 
+            "a_kwargs": {
+                "comm_steps" : 5,
+                "comm_size":6,
+                "hidden_size": 64
+            },
+            "c_kwargs": {
+                "hidden_size": 128
+            },
             "gamma": 0.99, 
             "lr":3e-4,
             "tau":0.001,
-            "batch_size":128,
+            "batch_size":256,
             "memory_size":65536,
             "device": "'cpu'"
         }
     },
-    "episodes": 50,
+    "episodes": 20,
     "schema": "'./data/citylearn_challenge_2022_phase_1/schema.json'",
     "reward": "simple_reward",
-    "id": 1
+    "id": 3
 }

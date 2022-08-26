@@ -38,9 +38,9 @@ def simple_reward(state, next_state, actions):
     previous_battery_soc = state[:,22].squeeze()
     actions = actions.squeeze()
         # Discharging too much
-    reward = reward + np.minimum(0,previous_battery_soc+(actions+0.1))
+    reward = reward + 0.5*np.minimum(0,previous_battery_soc+(actions+0.2))
         # Charging too much
-    reward = reward + np.minimum(0, (1 - previous_battery_soc)-(actions-0.1))
+    reward = reward + 0.5*np.minimum(0, (1 - previous_battery_soc)-(actions-0.2))
     
     # Output
     

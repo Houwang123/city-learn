@@ -22,8 +22,9 @@
             "device": "'cpu'"
         }
     },
-    "episodes": 20,
     "schema": "'./data/citylearn_challenge_2022_phase_1/schema.json'",
+    "steps_per_frame_save": 100,
+    "episodes": 20,
     "reward": "simple_reward",
     "id": 3
 }

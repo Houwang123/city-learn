@@ -3,6 +3,8 @@ env
 
 # Testing
 debugging.ipynb
+experiments/*
+!experiments/utils
 
 
 # Byte-compiled / optimized / DLL files

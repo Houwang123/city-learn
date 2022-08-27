@@ -112,28 +112,33 @@ class DDPGAgent:
         self.training = True
         self.step = 0
 
+        self.num_agents = 0
+        self.has_setup = False
+
     def register_reset(self, observation, training=True):
         '''
         Called at the start of each new episode
         '''
-        self.training = training
-        self.num_agents = len(observation["observation"])
-        self.step = 0
+        if not self.has_setup:
+            self.step = 0
+            self.has_setup = True
+            self.training = training
+            self.num_agents = len(observation["observation"])
+            
+            self.actor_feature.register_reset(observation)
+            self.critic_feature.register_reset(observation)
+            self.rb = ReplayBuffer((self.num_agents,1),self.actor_feature,self.critic_feature,memory_size=self.MEMORY_SIZE)
 
-        self.actor_feature.register_reset(observation)
-        self.critic_feature.register_reset(observation)
-        self.rb = ReplayBuffer((self.num_agents,1),self.actor_feature,self.critic_feature,memory_size=self.MEMORY_SIZE)
+            self.actor = self.actor_setup(input_size = self.actor_feature.out, **self.a_kwargs)
+            self.actor_target = copy.deepcopy(self.actor)
+            self.critic = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
+            self.critic_target = copy.deepcopy(self.critic)
+            
+            self.c_criterion = nn.MSELoss()
+            self.a_optimize = optim.Adam(self.actor.parameters(),lr=self.LR)
+            self.c_optimize = optim.Adam(self.critic.parameters(),lr=self.LR)
 
-        self.actor = self.actor_setup(input_size = self.actor_feature.out, **self.a_kwargs)
-        self.actor_target = copy.deepcopy(self.actor)
-        self.critic = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
-        self.critic_target = copy.deepcopy(self.critic)
-        
-        self.c_criterion = nn.MSELoss()
-        self.a_optimize = optim.Adam(self.actor.parameters(),lr=self.LR)
-        self.c_optimize = optim.Adam(self.critic.parameters(),lr=self.LR)
-
-        self.to(self.device)
+            self.to(self.device)
 
     def to(self,device):
         self.device = device
@@ -149,12 +154,14 @@ class DDPGAgent:
         with torch.no_grad():
             action = self.actor(a_obs).cpu().numpy()[0]
         if self.training:
-            action = action + np.random.normal(scale=max(0.03,0,5*np.exp(-0.001*self.step)), size=action.shape)
+            # Someone needs to be assigned to this
+            action = action + np.random.normal(scale=min(0.8,max(0.05,5*np.exp(-0.0002*self.step))), size=action.shape)
             action = np.clip(action,a_min=-1.0,a_max=1.0)
         return action
 
     def update(self,s,a,r,ns):
         self.rb.add(s,a,r,ns)
+        self.step += 1
         
         if len(self.rb) < self.BATCH_SIZE: # Get some data first before beginning the training process
             return
@@ -162,11 +169,11 @@ class DDPGAgent:
         a_s, c_s,a,r,a_ns, c_ns = self.rb.sample(batch_size=self.BATCH_SIZE)
 
         # Critic update
-        self.c_optimize.zero_grad()
         nsa, y_t = None,None
         with torch.no_grad():
             nsa = self.actor_target.forward(a_ns)
             y_t = torch.add(torch.unsqueeze(r,1), self.GAMMA * self.critic_target(c_ns,nsa))
+        self.c_optimize.zero_grad()
         y_c = self.critic(c_s, a) 
         c_loss = self.c_criterion(y_c,y_t)
         c_loss.backward()
@@ -191,3 +198,107 @@ class DDPGAgent:
     def load(self, path):
         self.actor.load_state_dict(torch.load(os.path.join(path,'actor.pt')))
         self.critic.load_state_dict(torch.load(os.path.join(path,'critic.pt')))
+
+
+class TD3Agent(DDPGAgent):
+
+    def __init__(self, actor, critic, actor_feature, critic_feature, a_kwargs={}, c_kwargs={}, gamma=0.99, lr=0.0003, tau=0.001, batch_size=64, memory_size=4096, device='cpu', clip_size = 0.05):
+        super().__init__(actor, critic, actor_feature, critic_feature, a_kwargs, c_kwargs, gamma, lr, tau, batch_size, memory_size, device)
+        self.clip_size = clip_size
+
+    def register_reset(self, observation, training = True):
+
+        if not self.has_setup:
+            self.step = 0
+            self.has_setup = True
+            self.training = training
+            self.num_agents = len(observation["observation"])
+            self.actor_feature.register_reset(observation)
+            self.critic_feature.register_reset(observation)
+            self.rb = ReplayBuffer((self.num_agents,1),self.actor_feature,self.critic_feature,memory_size=self.MEMORY_SIZE)
+
+            self.actor = self.actor_setup(input_size = self.actor_feature.out, **self.a_kwargs)
+            self.actor_target = copy.deepcopy(self.actor)
+            self.critic = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
+            self.critic_target = copy.deepcopy(self.critic)
+            
+            self.c_criterion = nn.MSELoss()
+            self.a_optimize = optim.Adam(self.actor.parameters(),lr=self.LR)
+            self.c_optimize = optim.Adam(self.critic.parameters(),lr=self.LR)
+
+            self.critic_2 = self.critic_setup(input_size = self.critic_feature.out, action_size=self.num_agents, **self.c_kwargs)
+            self.critic_target_2 = copy.deepcopy(self.critic_2)
+            self.c_optimize_2 = optim.Adam(self.critic_2.parameters(),lr=self.LR)
+            
+            self.to(self.device)
+
+    def to(self,device):
+        super(TD3Agent,self).to(device)
+        self.critic_2.to(device)
+        self.critic_target_2.to(device)
+
+    def update(self, s, a, r, ns):
+        self.rb.add(s,a,r,ns)
+        self.step += 1
+
+        if len(self.rb) < self.BATCH_SIZE: # Get some data first before beginning the training process
+            return
+
+        a_s, c_s, a, r,a_ns, c_ns = self.rb.sample(batch_size=self.BATCH_SIZE)
+
+        # Critic update
+        nsa, y_t = None,None
+        with torch.no_grad():
+            nsa = self.actor_target.forward(a_ns)
+
+            # Target policy smoothing
+            nsa = nsa + torch.normal(mean = torch.zeros(nsa.size()),
+                                     std = torch.ones(nsa.size())*self.clip_size)
+            nsa = torch.clip(nsa,-1,1)
+
+            # Clipped double-Q learning
+            y_t = torch.add(torch.unsqueeze(r,1), 
+                            self.GAMMA * torch.minimum(
+                                self.critic_target(c_ns,nsa),
+                                self.critic_target_2(c_ns,nsa)))
+
+        self.c_optimize.zero_grad()
+        self.c_optimize_2.zero_grad()
+        y_c = self.critic(c_s, a)
+        y_c_2 = self.critic_2(c_s, a) 
+        c_loss = self.c_criterion(y_c,y_t)
+        c_loss.backward()
+        self.c_optimize.step()   
+        c_loss_2 = self.c_criterion(y_c_2,y_t)
+        c_loss_2.backward()
+        self.c_optimize_2.step()
+ 
+        
+        # Actor and target network update  
+        if self.step % 2 == 0: # Delayed policy update
+
+            self.a_optimize.zero_grad()
+            if self.step % 4 == 2: # Using both actors - this is not common in practice?
+                a_loss = -self.critic(c_s,self.actor.forward(a_s)).mean() # Maximize gradient direction increasing objective function
+            else:
+                a_loss = -self.critic_2(c_s,self.actor.forward(a_s)).mean()
+
+            a_loss.backward()
+            self.a_optimize.step()
+
+            for ct_p, c_p in zip(self.critic_target.parameters(), self.critic.parameters()):
+                ct_p.data = ct_p.data * (1.0-self.TAU) + c_p.data * self.TAU
+            for ct_p, c_p in zip(self.critic_target_2.parameters(), self.critic_2.parameters()):
+                ct_p.data = ct_p.data * (1.0-self.TAU) + c_p.data * self.TAU
+            for at_p, a_p in zip(self.actor_target.parameters(), self.actor.parameters()):
+                at_p.data = at_p.data * (1.0-self.TAU) + a_p.data * self.TAU
+
+    def save(self, path):
+        torch.save(self.actor.state_dict(),os.path.join(path,'actor.pt'))
+        torch.save(self.critic.state_dict(),os.path.join(path,'critic_1.pt'))
+        torch.save(self.critic_2.state_dict(),os.path.join(path,'critic_2.pt'))
+
+    def load(self, path):
+        self.actor.load_state_dict(torch.load(os.path.join(path,'actor.pt')))
+        self.critic.load_state_dict(torch.load(os.path.join(path,'critic_1.pt')))
+        self.critic_2.load_state_dict(torch.load(os.path.join(path,'critic_2.pt')))

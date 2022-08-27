@@ -37,9 +37,9 @@ class CommNet(nn.Module):
         # Calculate first hidden layer 
         self._in_mlp = nn.Sequential(
             nn.Linear(input_size,hidden_size),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(hidden_size,hidden_size),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(hidden_size,memory_size)
         )
 
@@ -51,9 +51,7 @@ class CommNet(nn.Module):
 
         self._comm_mlp = nn.Sequential(
             nn.Linear(memory_size,hidden_size),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size,hidden_size),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(hidden_size,comm_size)
         )
 
@@ -61,9 +59,9 @@ class CommNet(nn.Module):
         # Calculate based on inputs and final memory
         self._out_mlp = nn.Sequential(
             nn.Linear(input_size+memory_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(hidden_size, 1),
             nn.Tanh()
         )
@@ -94,7 +92,7 @@ class CommNet(nn.Module):
 
         out = self._out_mlp(torch.cat((x,hidden_states),dim=-1))
 
-        return out
+        return out 
 
     def to(self,device):
         super().to(device)

@@ -12,7 +12,7 @@ class NothingAgent:
         pass
 
     def compute_action(self, obs):
-        return np.array([0 for x in range(len(obs))])
+        return [[0] for x in range(len(obs))]
 
     def save(*args):
         pass

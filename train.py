@@ -7,13 +7,13 @@ import ipywidgets as widgets
 
 import experiments.utils.setup as setup
 from experiments.utils.setup import env_reset
-from visualiser.frame_cache import append_one_frame
-from visualiser.train_progress_bar import update_progress_by_one
+from visualiser.frame_cache import FrameCache
+from visualiser.train_progress_bar import TrainProgressBar
 
 # p = optparse.OptionParser()
 # p.add_option('--force', '-f', type=None, help='Force overwrite of experiment',action="store_true")
 
-def train(experiment_json_file_path, force_overwrite=False):
+def train(experiment_json_file_path, force_overwrite=False, progress_bar = None, frame_cache = None):
     raw = experiment_json_file_path
     experiment =  json.load(open(raw,'r'))
     # options, arguments = p.parse_args()
@@ -57,7 +57,8 @@ def train(experiment_json_file_path, force_overwrite=False):
         while True:
             observations, _, done, _ = env.step(actions)
             
-            update_progress_by_one()
+            if progress_bar is not None:
+                progress_bar.update_progress_by_one()
 
             if done:
                 # Metric calculation
@@ -85,6 +86,6 @@ def train(experiment_json_file_path, force_overwrite=False):
             actions = agent.compute_action(observations)
 
             epoch += 1
-            if epoch % steps_per_frame_save == 0:
-                append_one_frame(env.render())
+            if epoch % steps_per_frame_save == 0 and frame_cache is not None:
+                frame_cache.append_one_frame(env.render())
     print("Best episode {}".format(best_episode))

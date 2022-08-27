@@ -21,8 +21,10 @@ class OneTab():
 
         def wait_for_train_finished():
             self.training_thread.join()
-            # train_button.disabled = False
-            # train_button.description = 'Restart Training'
+            self.train_button.disabled = False
+            self.training_thread = threading.Thread(target=train, args=('visualiser/created_experiment.json',True,self.train_progress_bar_o, self.frame_cache))
+            self.wait_for_training_thread = threading.Thread(target=wait_for_train_finished)
+            self.train_button.description = 'Restart Training'
             from IPython.display import display
             def _show(x):
                 display(self.frame_cache.get_image_of_frame_at(x))

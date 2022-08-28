@@ -2,7 +2,7 @@ import ipywidgets as widgets
 
 class TrainProgressBar:
     def __init__(self):
-        self.s = widgets.IntProgress(value=0,min=0,max=365*24)
+        self.s = widgets.IntProgress(layout=widgets.Layout(width='800px'),value=0,min=0,max=365*24)
 
     def initialize_progress(self,episode):
         self.s.max = 365*24*episode

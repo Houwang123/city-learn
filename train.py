@@ -1,5 +1,5 @@
 import json, math, sys, os, shutil, optparse, copy
-from citylearn.citylearn import CityLearnEnv
+from visualiser.custom_citylearn_env import CustomCityLearnEnv
 import pickle as pkl
 from tqdm import tqdm
 import ipywidgets as widgets
@@ -41,7 +41,7 @@ def train(experiment_json_file_path, force_overwrite=False, progress_bar = None,
     print("Setting reward {}".format(experiment['reward']))
     setup.setup_reward(experiment['reward'])
     print("Setting environment {}".format(experiment['schema']))
-    env = CityLearnEnv(experiment['schema'])
+    env = CustomCityLearnEnv(experiment['schema'])
 
     episodes_number = experiment['episodes']
     steps_per_frame_save = experiment['steps_per_frame_save']

@@ -1,3 +1,4 @@
+from re import T
 import ipywidgets as widgets
 import threading
 import numpy as np
@@ -9,14 +10,14 @@ from train import train
 
 class OneTab():
 
-    def __init__(self, experiment_id):
+    def __init__(self, experiment_id, allow_attributes_configuration=True):
 
         self.frame_cache = FrameCache()
         self.train_progress_bar_o = TrainProgressBar()
         self.training_thread = threading.Thread(target=train, args=('visualiser/created_experiment.json',True,self.train_progress_bar_o, self.frame_cache))
         self.current_id = experiment_id
 
-        self.train_button = widgets.Button(description='Start Training',disabled=False,button_style='')
+        self.train_button = widgets.Button(layout=Layout(width='800px'),description='Start Training',disabled=False,button_style='')
         self.img_ui = widgets.VBox()
 
         def wait_for_train_finished():
@@ -64,11 +65,11 @@ class OneTab():
                     self.module = sys.modules[(root + '/' + file[0:-3]).replace('/','.')]
                     self.agent_type_vars = np.append(self.agent_type_vars, np.array(dir(self.module)))
         self.agent_type_names = self.agent_type_vars[np.char.endswith(self.agent_type_vars,"Agent")]
-        self.total_episode_textbox = widgets.BoundedIntText(value=1,min=1,max=999,step=1,description='Number of episodes (years):',style={'description_width':'initial'})
-        self.steps_per_frame_save_textbox = widgets.BoundedIntText(value=200,min=1,max=365*24-1,step=1,description='Steps per frame save:',style={'description_width':'initial'})
-        self.reward_function_dropdown = widgets.Dropdown(options=self.reward_function_names, value='simple_reward',description='Reward function (has to end with reward):',style={'description_width':'initial'})
-        self.agent_type_dropdown = widgets.Dropdown(options=self.agent_type_names, value='TD3Agent',description='Agent (has to end with Agent):',style={'description_width':'initial'})
-        self.agent_attributes_textbox = widgets.Textarea(style={'description_width':'initial'},value='\"actor\": \"CommNet\",\n\"critic\": \"CentralCritic\",\n\"actor_feature\": \"RuleFeatureEngineerV0(BaseFeatureEngineer())\",\n\"critic_feature\": \"CentralCriticEngineer(RuleFeatureEngineerV0(BaseFeatureEngineer()))\", \n\"a_kwargs\": {\n\"comm_steps\" : 5,\n\"comm_size\":6,\n\"hidden_size\": 64\n},\n\"c_kwargs\": {\n\"hidden_size\": 128\n},\n\"gamma\": 0.99, \n\"lr\":3e-4,\n\"tau\":0.001,\n\"batch_size\":256,\n\"memory_size\":65536,\n\"device\": \"\'cpu\'\"')
+        self.total_episode_textbox = widgets.BoundedIntText(layout=Layout(width='800px'),value=1,min=1,max=999,step=1,description='Number of episodes (years):',style={'description_width':'initial'})
+        self.steps_per_frame_save_textbox = widgets.BoundedIntText(layout=Layout(width='800px'),value=200,min=1,max=365*24-1,step=1,description='Steps per frame save:',style={'description_width':'initial'})
+        self.reward_function_dropdown = widgets.Dropdown(layout=Layout(width='800px'),options=self.reward_function_names, value='simple_reward',description='Reward function (has to end with reward):',style={'description_width':'initial'})
+        self.agent_type_dropdown = widgets.Dropdown(layout=Layout(width='800px'),options=self.agent_type_names, value='TD3Agent',description='Agent (has to end with Agent):',style={'description_width':'initial'})
+        self.agent_attributes_textbox = widgets.Textarea(layout=Layout(width='800px',height='450px'),style={'description_width':'initial'},value='\"actor\": \"CommNet\",\n\"critic\": \"CentralCritic\",\n\"actor_feature\": \"RuleFeatureEngineerV0(BaseFeatureEngineer())\",\n\"critic_feature\": \"CentralCriticEngineer(RuleFeatureEngineerV0(BaseFeatureEngineer()))\", \n\"a_kwargs\": {\n\"comm_steps\" : 5,\n\"comm_size\":6,\n\"hidden_size\": 64\n},\n\"c_kwargs\": {\n\"hidden_size\": 128\n},\n\"gamma\": 0.99, \n\"lr\":3e-4,\n\"tau\":0.001,\n\"batch_size\":256,\n\"memory_size\":65536,\n\"device\": \"\'cpu\'\"')
         # agent_attributes_textbox = widgets.Label(style={'description_width':'initial'},value='\"actor\": \"CommNet\",\n\"critic\": \"CentralCritic\",\n\"actor_feature\": \"RuleFeatureEngineerV0(BaseFeatureEngineer())\",\n\"critic_feature\": \"CentralCriticEngineer(RuleFeatureEngineerV0(BaseFeatureEngineer()))\", \n\"a_kwargs\": {\n\"comm_steps\" : 5,\n\"comm_size\":6,\n\"hidden_size\": 64\n},\n\"c_kwargs\": {\n\"hidden_size\": 128\n},\n\"gamma\": 0.99, \n\"lr\":3e-4,\n\"tau\":0.001,\n\"batch_size\":256,\n\"memory_size\":65536,\n\"device\": \"\'cpu\'\"')
         # agent_attributes_textbox = widgets.Label(value="The $m$ in $E=mc^2$:")
         import json
@@ -88,6 +89,9 @@ class OneTab():
         self.train_progress_bar_o.initialize_progress(self.total_episode_textbox.value)
         self.experiment_input = widgets.VBox([self.total_episode_textbox, self.steps_per_frame_save_textbox, \
             self.reward_function_dropdown, self.agent_type_dropdown])
+        if allow_attributes_configuration:
+            self.experiment_input = widgets.VBox([self.total_episode_textbox, self.steps_per_frame_save_textbox, \
+            self.reward_function_dropdown, self.agent_type_dropdown, self.agent_attributes_textbox])
         self.experiment_ui = widgets.VBox([self.experiment_input, self.train_button, self.train_progress_bar])
         self.tab_ui = widgets.VBox([self.experiment_ui, self.img_ui])
 

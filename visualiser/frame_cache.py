@@ -17,22 +17,19 @@ class FrameCache:
     def get_total_frame_number(self):
         return len(self.frames)
 
-    def display_frame_at(self, index):
-        assert 0 <= index and index < self.get_total_frame_number(), "In display_frame_at, index must be valid"
+    def get_np_of_frame_at(self, index):
+        assert 0 <= index and index < self.get_total_frame_number(), "In get_np_of_frame_at, index must be valid"
         self.data = self.frames[index]
-        self.img = Image.fromarray(self.data, 'RGB')
-        self.img.show()
+        return self.data
 
     def get_image_of_frame_at(self, index):
-        assert 0 <= index and index < self.get_total_frame_number(), "In display_frame_at, index must be valid"
-        self.data = self.frames[index]
+        self.data = self.get_np_of_frame_at(index)
         self.img = Image.fromarray(self.data, 'RGB')
         return self.img
 
-    def get_np_of_frame_at(self, index):
-        assert 0 <= index and index < self.get_total_frame_number(), "In display_frame_at, index must be valid"
-        self.data = self.frames[index]
-        return self.data
+    def display_frame_at(self, index):
+        self.img = self.get_image_of_frame_at(index)
+        self.img.show()
 
     def compress_to_bytes(self, data, fmt = 'png'):
         """

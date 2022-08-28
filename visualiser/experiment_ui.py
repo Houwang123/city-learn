@@ -7,14 +7,14 @@ from visualiser.one_tab import OneTab
 
 class ExperimentUI:
 
-    def __init__(self):
+    def __init__(self, allow_attributes_configuration=True):
         self.existing_experiment_ids = []
         for root, dirs, files in os.walk('experiments'):
             self.existing_experiment_ids = dirs[:-1]
             break
         self.experiment_tab = widgets.Tab()
         self.experiment_tab.titles = [str(i) for i in range(len(self.existing_experiment_ids))]
-        self.experiment_tab.children = [OneTab(int(id)).get_ui_object() for id in self.existing_experiment_ids]
+        self.experiment_tab.children = [OneTab(int(id),allow_attributes_configuration).get_ui_object() for id in self.existing_experiment_ids]
 
         def add_tab_to_experiment_tab(c):
             def get_new_experiment_id():

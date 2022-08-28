@@ -12,6 +12,7 @@ class ExperimentUI:
         for root, dirs, files in os.walk('experiments'):
             self.existing_experiment_ids = dirs[:-1]
             break
+        self.existing_experiment_ids = self.existing_experiment_ids[1:] # Remove util folder
         self.experiment_tab = widgets.Tab()
         self.experiment_tab.titles = [str(i) for i in range(len(self.existing_experiment_ids))]
         self.experiment_tab.children = [OneTab(int(id)).get_ui_object() for id in self.existing_experiment_ids]

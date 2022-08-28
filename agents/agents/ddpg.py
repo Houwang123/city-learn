@@ -24,7 +24,7 @@ class ReplayBuffer:
         self.c_s = np.zeros(add_dimension(memory_size,critic_obs_shape),dtype=np.float32)
         self.a_s = np.zeros(add_dimension(memory_size,actor_obs_shape),dtype=np.float32)
         self.a = np.zeros(add_dimension(memory_size,act_shape),dtype=np.float32)
-        self.r = np.zeros(memory_size,dtype=np.float32)
+        self.r = np.zeros(add_dimension(memory_size,(act_shape[0],)),dtype=np.float32)
         self.c_ns = np.zeros(add_dimension(memory_size,critic_obs_shape),dtype=np.float32)
         self.a_ns = np.zeros(add_dimension(memory_size,actor_obs_shape),dtype=np.float32)
 
@@ -32,7 +32,6 @@ class ReplayBuffer:
         self.device = 'cpu'
 
     def add(self, s, a, r, ns):
-        r = np.sum(r)
         self.c_s[self.i] = self.critic_feature.transform(s)
         self.a_s[self.i] = self.actor_feature.transform(s)
         self.a[self.i] = a
@@ -168,6 +167,9 @@ class DDPGAgent:
 
         a_s, c_s,a,r,a_ns, c_ns = self.rb.sample(batch_size=self.BATCH_SIZE)
 
+        if self.critic_setup.centralised:
+            r = torch.sum(r,1)
+
         # Critic update
         nsa, y_t = None,None
         with torch.no_grad():
@@ -244,8 +246,12 @@ class TD3Agent(DDPGAgent):
         if len(self.rb) < self.BATCH_SIZE: # Get some data first before beginning the training process
             return
 
+       
         a_s, c_s, a, r,a_ns, c_ns = self.rb.sample(batch_size=self.BATCH_SIZE)
 
+        if self.critic_setup.centralised:
+            r = torch.sum(r,1)
+            
         # Critic update
         nsa, y_t = None,None
         with torch.no_grad():

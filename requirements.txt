@@ -14,3 +14,5 @@ torchaudio==0.12.1
 tensorboard==2.10.0
 tqdm
 holidays==0.15
+ipywidgets
+

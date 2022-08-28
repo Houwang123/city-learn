@@ -13,3 +13,6 @@ class TrainProgressBar:
 
     def get_object(self):
         return self.s
+
+    def close(self):
+        pass

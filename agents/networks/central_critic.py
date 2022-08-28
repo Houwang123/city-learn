@@ -11,6 +11,8 @@ class CentralCritic(nn.Module):
     with a multi layer perceptron
     '''
 
+    centralised = True
+
     def __init__(self,
                 input_size,
                 action_size,

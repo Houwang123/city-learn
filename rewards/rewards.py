@@ -6,6 +6,7 @@ import numpy as np
 # OFFICIAL USER_REWARD STRUCTURE                        #
 #########################################################
 
+'''
 def default_reward(electricity_consumption, 
                    carbon_emission, 
                    electricity_price, 
@@ -16,6 +17,7 @@ def default_reward(electricity_consumption,
     reward = (carbon_emission + electricity_price)*-1
     
     return reward
+'''
 
 #########################################################
 # BELOW ARE REWARDS THAT USE ALL AVAILABLE OBSERVATIONS #
@@ -46,3 +48,6 @@ def simple_reward(state, next_state, actions):
     # Output
     
     return reward
+
+def cubic_simple_reward(state, next_state, actions):
+    return simple_reward(state, next_state, actions) ** 3

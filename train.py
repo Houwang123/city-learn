@@ -49,12 +49,12 @@ def train(experiment_json_file_path, force_overwrite=False, progress_bar = None,
     best_metrics = math.inf
     best_episode = 0
 
+    if progress_bar == 'tqdm':
+        pbar = tqdm(total=24*365)
+
     for episode in range(episodes_number):
         actions = agent.register_reset(obs_dict, training=True)
         epoch = 0
-
-        if progress_bar == 'tqdm':
-            pbar = tqdm(total=24*365)
 
         while True:
             observations, _, done, _ = env.step(actions)
@@ -99,7 +99,7 @@ def train(experiment_json_file_path, force_overwrite=False, progress_bar = None,
                 frame_cache.append_one_frame(env.render())
 
     if progress_bar == 'tqdm':
-        progress_bar.close()
+        pbar.close()
     print("Best episode {}".format(best_episode))
 
 #############################################################3

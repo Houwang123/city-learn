@@ -168,13 +168,13 @@ class DDPGAgent:
         a_s, c_s,a,r,a_ns, c_ns = self.rb.sample(batch_size=self.BATCH_SIZE)
 
         if self.critic_setup.centralised:
-            r = torch.sum(r,1)
+            r = torch.unsqueeze(torch.sum(r,1),1)
 
         # Critic update
         nsa, y_t = None,None
         with torch.no_grad():
             nsa = self.actor_target.forward(a_ns)
-            y_t = torch.add(torch.unsqueeze(r,1), self.GAMMA * self.critic_target(c_ns,nsa))
+            y_t = torch.add(r, self.GAMMA * self.critic_target(c_ns,nsa))
         self.c_optimize.zero_grad()
         y_c = self.critic(c_s, a) 
         c_loss = self.c_criterion(y_c,y_t)
@@ -183,7 +183,7 @@ class DDPGAgent:
 
         # Actor update
         self.a_optimize.zero_grad()
-        a_loss = -self.critic(c_s,self.actor.forward(a_s)).mean() # Maximize gradient direction increasing objective function
+        a_loss = -torch.sum(self.critic(c_s,self.actor.forward(a_s)),dim=1).mean() # Maximize gradient direction increasing objective function
         a_loss.backward()
         self.a_optimize.step()
 
@@ -250,7 +250,8 @@ class TD3Agent(DDPGAgent):
         a_s, c_s, a, r,a_ns, c_ns = self.rb.sample(batch_size=self.BATCH_SIZE)
 
         if self.critic_setup.centralised:
-            r = torch.sum(r,1)
+            r = torch.unsqueeze(torch.sum(r,1),1)
+
             
         # Critic update
         nsa, y_t = None,None
@@ -263,7 +264,7 @@ class TD3Agent(DDPGAgent):
             nsa = torch.clip(nsa,-1,1)
 
             # Clipped double-Q learning
-            y_t = torch.add(torch.unsqueeze(r,1), 
+            y_t = torch.add(r, 
                             self.GAMMA * torch.minimum(
                                 self.critic_target(c_ns,nsa),
                                 self.critic_target_2(c_ns,nsa)))
@@ -284,10 +285,7 @@ class TD3Agent(DDPGAgent):
         if self.step % 2 == 0: # Delayed policy update
 
             self.a_optimize.zero_grad()
-            if self.step % 4 == 2: # Using both actors - this is not common in practice?
-                a_loss = -self.critic(c_s,self.actor.forward(a_s)).mean() # Maximize gradient direction increasing objective function
-            else:
-                a_loss = -self.critic_2(c_s,self.actor.forward(a_s)).mean()
+            a_loss = -torch.sum(self.critic(c_s,self.actor.forward(a_s)),dim=1).mean() # Maximize gradient direction increasing objective function
 
             a_loss.backward()
             self.a_optimize.step()

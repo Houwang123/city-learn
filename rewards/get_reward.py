@@ -1,13 +1,11 @@
 from typing import List
 import numpy as np
-from rewards.rewards import *
 
-reward_function = None
+###########################################################################
+#####                Specify your reward function here                #####
+###########################################################################
 
-def get_reward(electricity_consumption: List[float], 
-               carbon_emission: List[float], 
-               electricity_price: List[float], 
-               agent_ids: List[int]) -> List[float]:
+def get_reward(electricity_consumption: List[float], carbon_emission: List[float], electricity_price: List[float], agent_ids: List[int]) -> List[float]:
         """CityLearn Challenge user reward calculation.
 
         Parameters
@@ -27,5 +25,12 @@ def get_reward(electricity_consumption: List[float],
             Agent(s) reward(s) where the length of returned list is either = 1 (central agent controlling all buildings) 
             or = number of buildings (independent agent for each building).
         """
+
+        # *********** BEGIN EDIT ***********
+        # Replace with custom reward calculation
+        carbon_emission = np.array(carbon_emission).clip(min=0)
+        electricity_price = np.array(electricity_price).clip(min=0)
+        reward = (carbon_emission + electricity_price)*-1
+        # ************** END ***************
         
-        # return reward_function(electricity_consumption,carbon_emission, electricity_price, agent_ids)
+        return reward

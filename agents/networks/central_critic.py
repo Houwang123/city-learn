@@ -18,15 +18,16 @@ class CentralCritic(nn.Module):
     def __init__(self,
                 input_size,
                 action_size,
-                hidden_size = 32):
+                hidden_size = 32,
+                value_function = False):
         super(CentralCritic, self).__init__()
 
         input_size = input_size[0]
         self.input_size = input_size
-
+        self.value_function = value_function
 
         self._in_mlp = nn.Sequential(
-            nn.Linear(input_size+action_size, hidden_size),
+            nn.Linear(input_size+action_size * (not value_function), hidden_size),
             nn.Tanh(),
             nn.Linear(hidden_size, hidden_size),
             nn.Tanh(),
@@ -37,7 +38,8 @@ class CentralCritic(nn.Module):
         '''
         Only batch operations
         '''
-        states = torch.cat((torch.flatten(states,start_dim=1),torch.flatten(actions,start_dim=1)),dim=1)
+        if not self.value_function:
+            states = torch.cat((torch.flatten(states,start_dim=1),torch.flatten(actions,start_dim=1)),dim=1)
         return self._in_mlp(states)
 
 class SharedCritic(nn.Module):
@@ -49,15 +51,17 @@ class SharedCritic(nn.Module):
     def __init__(self,
                 input_size,
                 action_size,
-                hidden_size = 32):
+                hidden_size = 32,
+                value_function = False):
         super(SharedCritic, self).__init__()
 
         input_size = input_size[0]
+        
         self.input_size = input_size
-
-
+        self.value_function = value_function
+    
         self._in_mlp = nn.Sequential(
-            nn.Linear(input_size+action_size, hidden_size),
+            nn.Linear(input_size+action_size*(not value_function), hidden_size),
             nn.Tanh(),
             nn.Linear(hidden_size, hidden_size),
             nn.Tanh(),
@@ -68,5 +72,6 @@ class SharedCritic(nn.Module):
         '''
         Only batch operations
         '''
-        states = torch.cat((torch.flatten(states,start_dim=1),torch.flatten(actions,start_dim=1)),dim=1)
+        if not self.value_function:
+            states = torch.cat((torch.flatten(states,start_dim=1),torch.flatten(actions,start_dim=1)),dim=1)
         return self._in_mlp(states)

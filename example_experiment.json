@@ -1,8 +1,8 @@
 {   
     "agent": {
-        "type": "TD3Agent", 
+        "type": "PPOAgent", 
         "attributes": {
-            "actor": "CommNet",
+            "actor": "ContinuousCommNet",
             "critic": "SharedCritic",
             "actor_feature": "RuleFeatureEngineerV0(BaseFeatureEngineer())",
             "critic_feature": "CentralCriticEngineer(RuleFeatureEngineerV0(BaseFeatureEngineer()))", 
@@ -16,15 +16,12 @@
             },
             "gamma": 0.99, 
             "lr":3e-4,
-            "tau":0.001,
-            "batch_size":256,
-            "memory_size":65536,
             "device": "'cpu'"
         }
     },
     "schema": "'./data/citylearn_challenge_2022_phase_1/schema.json'",
     "steps_per_frame_save": 100,
-    "episodes": 20,
-    "reward": "cubic_simple_reward",
-    "id": 2
+    "episodes": 50,
+    "reward": "simple_reward",
+    "id": 3
 }

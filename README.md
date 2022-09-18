@@ -7,8 +7,7 @@
 4. `pip3 install -r requirements.txt`
 
 ## Example
-1. Delete experiments/0
-2. Run `train.py example_experiment`
+1. Run `train.py example_experiment -f`
 
 ## Creating a new agent
 1. Design networks used in agents.networks

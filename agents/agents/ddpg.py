@@ -111,16 +111,14 @@ class DDPGAgent:
         self.training = True
         self.step = 0
 
-        self.num_agents = 0
-        self.has_setup = False
+        self.num_agents = -1
 
     def register_reset(self, observation, training=True):
         '''
         Called at the start of each new episode
         '''
-        if not self.has_setup:
+        if self.num_agents != len(observation["observation"]):
             self.step = 0
-            self.has_setup = True
             self.training = training
             self.num_agents = len(observation["observation"])
             
@@ -210,9 +208,8 @@ class TD3Agent(DDPGAgent):
 
     def register_reset(self, observation, training = True):
 
-        if not self.has_setup:
+        if self.num_agents != len(observation["observation"]):
             self.step = 0
-            self.has_setup = True
             self.training = training
             self.num_agents = len(observation["observation"])
             self.actor_feature.register_reset(observation)

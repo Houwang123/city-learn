@@ -97,3 +97,17 @@ class CommNet(nn.Module):
     def to(self,device):
         super().to(device)
         self.device = device
+
+
+class ContinuousCommNet(CommNet):
+    '''
+    CommNet wrapped with an extra learned state independent log standard deviation parameter.
+    '''
+    def __init__(self, *args, **kwargs):
+        super(ContinuousCommNet,self).__init__(*args,**kwargs)
+        self.actor_logstd = nn.Parameter(torch.zeros(1))
+
+    def forward(self, x):
+        mean = super(ContinuousCommNet,self).forward(x)
+        std = torch.exp(self.actor_logstd)
+        return torch.distributions.Normal(mean,std)

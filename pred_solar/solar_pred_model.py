@@ -1,10 +1,11 @@
 import torch as t
 import torch.nn as nn
 
+
 class SolarPredModel(nn.Module):
     def __init__(self):
         super(SolarPredModel, self).__init__()
-        self.fc1 = nn.Linear(4, 1000)
+        self.fc1 = nn.Linear(5, 1000)
         # self.dropout = nn.Dropout(0.5)
         self.bn1 = nn.BatchNorm1d(1000)
         self.fc2 = nn.Linear(1000, 1000)

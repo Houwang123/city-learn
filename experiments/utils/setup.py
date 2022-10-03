@@ -74,6 +74,7 @@ from agents.orderenforcingwrapper import OrderEnforcingAgent
 from agents.agents.ddpg import DDPGAgent, TD3Agent
 from agents.agents.ppo import PPOAgent
 from agents.agents.rules import NothingAgent
+from agents.agents.rbc import RBCAgent
 from agents.networks.central_critic import *
 from agents.networks.comm_net import *
 from agents.features import *

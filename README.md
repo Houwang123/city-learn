@@ -1,6 +1,6 @@
 # city-learn rl 
 
-A baseline multiagent reinforcement learning experiment on https://github.com/intelligent-environments-lab/CityLearn with custom TD3 for learning purposes
+A baseline multiagent reinforcement learning experiment on https://github.com/intelligent-environments-lab/CityLearn with learning
 - Custom implementation of PPO, DDPG, TD3 on a CommNet Architecture
 - Infrastructure for running MLOPS on the CityLearn environment
 
